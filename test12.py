@@ -1,21 +1,34 @@
 from app import app
 import unittest
-import tempfile
-import os
+import json
 
 class LocatorTest(unittest.TestCase):
+
+    insert_data = json.dumps({
+        'pin': 'IN/110001',
+        'name': 'Connaught Place',
+        'admin': 'New Delhi',
+        'lat': 28.6333,
+        'lon': 77.2167,
+    })
+
+    data = json.dumps({
+        'latitude': 28.6333,
+        'longitude': 77.2167,
+        'radius': 5.0,
+    })
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    }
 
     def setUp(self):
         app.config['TESTING'] = True
         self.app = app.test_client()
-        self.db_fd = tempfile.mkstemp()
-        self.app.config['DATABASE']=tempfile.mkstemp()
-        with app.app_context():
-            app.init_db()
 
     def tearDown(self):
-        os.close(self.db_fd)
-        os.unlink(app.config['DATABASE'])
+        pass
 
     def test_main(self):
         resp = self.app.get('/', follow_redirects=True)
@@ -31,7 +44,38 @@ class LocatorTest(unittest.TestCase):
 
     def test_post1(self):
         resp = self.app.get('/post_location', follow_redirects=True)
-        self.assertEqual(resp.status_code, 405)            
+        self.assertEqual(resp.status_code, 405)
+
+    def test_post2(self):
+        resp = self.app.post('/post_location', data=self.insert_data, headers=self.headers)
+        data = json.loads(resp.get_data(as_text=True))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_postApi(self):
+        resp = self.app.post('/post_location', data=self.insert_data, headers=self.headers)
+        data = json.loads(resp.get_data(as_text=True))
+        self.assertEqual(data['msg'], 'Already present')
+
+    def testPostWrongData(self):
+        insert_data = json.dumps({
+            'pin':'IN/810001',
+            'admin':'New Delhi',
+            'lat':28.6333,
+            'lon':77.2167,
+        })
+        res = self.app.post("/post_location", data=insert_data, headers=self.headers)
+        data = json.loads(res.get_data(as_text=True))
+        self.assertEqual(data['msg'], 'Incomplete data')
+
+    def testCompareGetApis(self):
+        res1 = self.app.get("/get_using_postgres", data=self.data, headers=self.headers)
+        data1 = json.loads(res1.get_data(as_text=True))
+
+        res2 = self.app.get("/get_using_self", data=self.data, headers=self.headers)
+        data2 = json.loads(res2.get_data(as_text=True))
+
+        self.assertEqual(data1['number'], data2['number'])
+
 
 if __name__ == '__main__':
     unittest.main()                

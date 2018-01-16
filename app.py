@@ -4,7 +4,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func
 import math
 from helper import haversine
-import json
 
 app = Flask(__name__)
 
@@ -13,10 +12,9 @@ session = session()
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
 @app.route('/post_location', methods=['POST'])
 def postLocation():
-    data = request.json
+    data = request.get_json()
     if data:
         key = data['pin'] if data.get('pin') else None
         place_name = data['name'] if data.get('name') else None
@@ -66,7 +64,7 @@ def postLocation():
 
 @app.route('/get_using_postgres')
 def getPsql():
-    data = request.json
+    data = request.get_json()
     if data:
         lat = float(data['latitude'])
         lon = float(data['longitude'])
@@ -91,7 +89,7 @@ def getPsql():
 
 @app.route('/get_using_self')
 def getSelf():
-    data = request.json
+    data = request.get_json()
     if data:
         lat = float(data['latitude'])
         lon = float(data['longitude'])
