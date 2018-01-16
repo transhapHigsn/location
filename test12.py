@@ -41,6 +41,51 @@ class LocatorTest(unittest.TestCase):
         test = os.path.exists('apper.db')
         self.assertFalse(test)
 
+    def test_emptyDb(self):
+        with app.app_context():
+            cur = apper.get_db().cursor()
+            d = cur.fetchall()
+            self.assertEqual(len(d), 0)
+
+    def test_firstInsertDb(self):
+        with app.app_context():
+            cur = apper.get_db().cursor()
+            sql = "INSERT INTO Location VALUES ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)"
+            cur.execute(sql)
+            self.assertEqual(cur.lastrowid, 1)
+
+    def test_updateDb(self):
+        with app.app_context():
+            conn = apper.get_db()
+            cur = conn.cursor()
+            sql1 = "INSERT INTO Location VALUES ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)"
+            cur.execute(sql1)
+            conn.commit()
+
+            sql2 = "Update Location set place_name='South Delhi' where accuracy=5"
+            cur.execute(sql2)
+            conn.commit()
+
+            sql3 = "Select * from Location" #" where place_name='Gurgaon'"
+            cur.execute(sql3)
+            d = cur.fetchone()
+
+            self.assertEqual(d['place_name'], 'South Delhi')
+
+    def test_dbSelectQuery(self):
+        with app.app_context():
+            conn = apper.get_db()
+            cur = conn.cursor()
+            sql1 = "INSERT INTO Location VALUES ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)"
+            cur.execute(sql1)
+            conn.commit()
+
+            sql2 = "SELECT * FROM Location where accuracy=0"
+            cur.execute(sql2)
+            d = cur.fetchall()
+
+            self.assertEqual(len(d), 0)
+
     def test_schemaSql(self):
         pass
 
