@@ -107,10 +107,7 @@ def getSelf():
                 if d and d <= radius:
                     c += 1
                     lst.append(r.key)
-
-
-        val = res.json()
-        self.assertEqual(val,{'msg':'Already present'})
+        lst.sort()
         return jsonify(nearby=lst, number=c, msg='Successful')
     else:
         return jsonify(msg='Not implemented')
