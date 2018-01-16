@@ -1,6 +1,9 @@
 from app import app
+import app as apper
 import unittest
 import json
+import os
+import tempfile
 
 class LocatorTest(unittest.TestCase):
 
@@ -25,9 +28,20 @@ class LocatorTest(unittest.TestCase):
 
     def setUp(self):
         app.config['TESTING'] = True
+        self.db_fd, app.config['DATABASE'] = tempfile.mkstemp()
+
         self.app = app.test_client()
+        apper.init_db()
 
     def tearDown(self):
+        os.close(self.db_fd)
+        os.unlink(app.config['DATABASE'])
+
+    def test_database(self):
+        test = os.path.exists('apper.db')
+        self.assertFalse(test)
+
+    def test_schemaSql(self):
         pass
 
     def test_main(self):
