@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 
+
 class LocatorTest(unittest.TestCase):
 
     insert_data = json.dumps({
@@ -25,6 +26,9 @@ class LocatorTest(unittest.TestCase):
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     }
+
+    insert_sql = "Insert into Location values (?,?,?,?,?,?)"
+    select_sql = "Select * from Location"
 
     def setUp(self):
         app.config['TESTING'] = True
@@ -48,36 +52,37 @@ class LocatorTest(unittest.TestCase):
             self.assertEqual(len(d), 0)
 
     def test_firstInsertDb(self):
+        data = ('1','Gurgaon', 'Haryana', 45.23, 23.21, 5)
         with app.app_context():
             cur = apper.get_db().cursor()
-            sql = "INSERT INTO Location VALUES ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)"
-            cur.execute(sql)
+            cur.execute(self.insert_sql, data)
             self.assertEqual(cur.lastrowid, 1)
 
     def test_updateDb(self):
+        data = ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)
         with app.app_context():
             conn = apper.get_db()
             cur = conn.cursor()
-            sql1 = "INSERT INTO Location VALUES ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)"
-            cur.execute(sql1)
+            cur.execute(self.insert_sql, data)
             conn.commit()
 
             sql2 = "Update Location set place_name='South Delhi' where accuracy=5"
             cur.execute(sql2)
             conn.commit()
 
-            sql3 = "Select * from Location" #" where place_name='Gurgaon'"
-            cur.execute(sql3)
+            #sql3 = "Select * from Location" #" where place_name='Gurgaon'"
+            cur.execute(self.select_sql)
             d = cur.fetchone()
 
             self.assertEqual(d['place_name'], 'South Delhi')
 
     def test_dbSelectQuery(self):
+        data = ('1','Gurgaon', 'Haryana', 45.23, 23.21, 5)
         with app.app_context():
             conn = apper.get_db()
             cur = conn.cursor()
-            sql1 = "INSERT INTO Location VALUES ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)"
-            cur.execute(sql1)
+            #sql1 = "INSERT INTO Location VALUES ('1', 'Gurgaon', 'Haryana', 45.23, 23.21, 5)"
+            cur.execute(self.insert_sql, data)
             conn.commit()
 
             sql2 = "SELECT * FROM Location where accuracy=0"
